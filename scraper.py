@@ -36,12 +36,12 @@ def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=
         'quiet': False, # Showing output so user knows it's not frozen
         'no_warnings': True,
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
-    }
-    
+    # Note: `(browser,)` or `(browser, None, None, None)` is what yt-dlp expects inside ydl_opts
     if browser:
-        ydl_opts['cookiesfrombrowser'] = (browser,)
-
-    # Add limits to yt-dlp config if the user selected a custom range
+        if isinstance(browser, tuple):
+             ydl_opts['cookiesfrombrowser'] = browser
+        else:
+             ydl_opts['cookiesfrombrowser'] = (browser,)
     if not fetch_all:
         if start_index:
             ydl_opts['playliststart'] = start_index
@@ -157,7 +157,10 @@ def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=
                 }
                 
                 if browser:
-                    dl_opts['cookiesfrombrowser'] = (browser,)
+                    if isinstance(browser, tuple):
+                         dl_opts['cookiesfrombrowser'] = browser
+                    else:
+                         dl_opts['cookiesfrombrowser'] = (browser,)
                 
                 if target_res and target_res != 'best':
                     dl_opts['format'] = f'bestvideo[height<={target_res}]+bestaudio/best[height<={target_res}]/best'
@@ -284,10 +287,19 @@ if __name__ == "__main__":
     print("  3 - Firefox")
     print("  4 - Brave")
     print("  5 - Opera")
-    print("  6 - None (Try anonymously - May fail on YouTube)")
+    print("  6 - Chrome (via keyring - use if option 1 fails)")
+    print("  7 - None (Try anonymously - May fail on YouTube)")
     
-    browser_choice = input("\nEnter your choice (1-6) or press ENTER for Chrome: ").strip()
-    browser_map = {'1': 'chrome', '2': 'edge', '3': 'firefox', '4': 'brave', '5': 'opera', '6': None}
+    browser_choice = input("\nEnter your choice (1-7) or press ENTER for Chrome: ").strip()
+    browser_map = {
+        '1': 'chrome', 
+        '2': 'edge', 
+        '3': 'firefox', 
+        '4': 'brave', 
+        '5': 'opera', 
+        '6': ('chrome', None, None, 'keyring'),
+        '7': None
+    }
     
     selected_browser = browser_map.get(browser_choice, 'chrome')
     if not browser_choice:
