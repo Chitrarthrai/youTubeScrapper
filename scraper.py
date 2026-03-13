@@ -28,7 +28,7 @@ def format_duration(seconds):
         return "Unknown"
     return str(datetime.timedelta(seconds=int(seconds)))
 
-def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=None, selected_keys=None, download=False, resolution=None, interactive_res=False):
+def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=None, selected_keys=None, download=False, resolution=None, interactive_res=False, browser=None):
     ydl_opts = {
         'extract_flat': False,
         'skip_download': True, # We handle downloads separately to allow interactive resolution picking
@@ -37,6 +37,9 @@ def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=
         'no_warnings': True,
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
     }
+    
+    if browser:
+        ydl_opts['cookiesfrombrowser'] = (browser,)
 
     # Add limits to yt-dlp config if the user selected a custom range
     if not fetch_all:
@@ -152,6 +155,9 @@ def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=
                     'noprogress': False,
                     'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
                 }
+                
+                if browser:
+                    dl_opts['cookiesfrombrowser'] = (browser,)
                 
                 if target_res and target_res != 'best':
                     dl_opts['format'] = f'bestvideo[height<={target_res}]+bestaudio/best[height<={target_res}]/best'
@@ -271,6 +277,22 @@ if __name__ == "__main__":
             else:
                 resolution = 'best'
 
+    # ---- BROWSER AUTHENTICATION MENU ----
+    print("\n[*] Select Browser for Authentication (Required to bypass YouTube bot detection):")
+    print("  1 - Chrome (Default)")
+    print("  2 - Edge")
+    print("  3 - Firefox")
+    print("  4 - Brave")
+    print("  5 - Opera")
+    print("  6 - None (Try anonymously - May fail on YouTube)")
+    
+    browser_choice = input("\nEnter your choice (1-6) or press ENTER for Chrome: ").strip()
+    browser_map = {'1': 'chrome', '2': 'edge', '3': 'firefox', '4': 'brave', '5': 'opera', '6': None}
+    
+    selected_browser = browser_map.get(browser_choice, 'chrome')
+    if not browser_choice:
+        selected_browser = 'chrome'
+
     # ---- START SCRAPE ----
     video_data = get_playlist_info(
         url, 
@@ -280,7 +302,8 @@ if __name__ == "__main__":
         selected_keys=selected_keys,
         download=download_videos,
         resolution=resolution,
-        interactive_res=interactive_res
+        interactive_res=interactive_res,
+        browser=selected_browser
     )
     
     if video_data:
