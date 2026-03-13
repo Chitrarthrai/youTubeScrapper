@@ -36,12 +36,17 @@ def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=
         'quiet': False, # Showing output so user knows it's not frozen
         'no_warnings': True,
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
+    }
     # Note: `(browser,)` or `(browser, None, None, None)` is what yt-dlp expects inside ydl_opts
     if browser:
-        if isinstance(browser, tuple):
+        if browser == 'playwright_live':
+            ydl_opts['cookiefile'] = 'cookies.txt'
+        elif isinstance(browser, tuple):
              ydl_opts['cookiesfrombrowser'] = browser
         else:
              ydl_opts['cookiesfrombrowser'] = (browser,)
+
+    # Add limits to yt-dlp config if the user selected a custom range
     if not fetch_all:
         if start_index:
             ydl_opts['playliststart'] = start_index
@@ -157,7 +162,9 @@ def get_playlist_info(playlist_url, fetch_all=True, start_index=None, end_index=
                 }
                 
                 if browser:
-                    if isinstance(browser, tuple):
+                    if browser == 'playwright_live':
+                        dl_opts['cookiefile'] = 'cookies.txt'
+                    elif isinstance(browser, tuple):
                          dl_opts['cookiesfrombrowser'] = browser
                     else:
                          dl_opts['cookiesfrombrowser'] = (browser,)
@@ -282,15 +289,18 @@ if __name__ == "__main__":
 
     # ---- BROWSER AUTHENTICATION MENU ----
     print("\n[*] Select Browser for Authentication (Required to bypass YouTube bot detection):")
-    print("  1 - Chrome (Default)")
-    print("  2 - Edge")
+    print("\n    >>> IMPORTANT: For Chrome/Edge, you MUST close ALL browser windows first! <<<")
+    print("    >>> If you still get a 'cookie database locked' error, try option 6.    <<<\n")
+    print("  1 - Chrome (Default - Close Chrome first!)")
+    print("  2 - Edge (Close Edge first!)")
     print("  3 - Firefox")
     print("  4 - Brave")
     print("  5 - Opera")
-    print("  6 - Chrome (via keyring - use if option 1 fails)")
+    print("  6 - Chrome (via keyring / bypass lock - use if option 1 fails)")
     print("  7 - None (Try anonymously - May fail on YouTube)")
+    print("  8 - Live Login (Use a secure separate pop-up browser window to log in instantly)")
     
-    browser_choice = input("\nEnter your choice (1-7) or press ENTER for Chrome: ").strip()
+    browser_choice = input("\nEnter your choice (1-8) or press ENTER for Live Login (Recommended!): ").strip()
     browser_map = {
         '1': 'chrome', 
         '2': 'edge', 
@@ -298,12 +308,35 @@ if __name__ == "__main__":
         '4': 'brave', 
         '5': 'opera', 
         '6': ('chrome', None, None, 'keyring'),
-        '7': None
+        '7': None,
+        '8': 'playwright_live'
     }
     
-    selected_browser = browser_map.get(browser_choice, 'chrome')
+    selected_browser = browser_map.get(browser_choice, 'playwright_live')
     if not browser_choice:
-        selected_browser = 'chrome'
+        selected_browser = 'playwright_live'
+        
+    # Trigger the Playwright Login if chosen
+    if selected_browser == 'playwright_live':
+        print("\n    [+] Which browser would you like the Live Login window to use?")
+        print("      1 - Chrome (Default)")
+        print("      2 - Edge")
+        print("      3 - Firefox")
+        live_choice = input("    Enter choice (1-3) or press ENTER for Chrome: ").strip()
+        
+        live_browser = 'chrome'
+        if live_choice == '2':
+            live_browser = 'edge'
+        elif live_choice == '3':
+            live_browser = 'firefox'
+            
+        try:
+            from yt_login import login_and_save_cookies
+            login_and_save_cookies('cookies.txt', browser_type=live_browser)
+        except ImportError:
+            print("[!] Could not import yt_login! Make sure requirements are installed.")
+            print("To fix: Run 'pip install playwright' and 'playwright install chromium'")
+            exit(1)
 
     # ---- START SCRAPE ----
     video_data = get_playlist_info(

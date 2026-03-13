@@ -51,6 +51,9 @@ python -m pip install --upgrade pip
 :: Ensure requirements are met safely and keep them updated
 python -m pip install --upgrade -r requirements.txt
 
+:: Ensure playwright browsers are installed
+playwright install chromium
+
 echo [+] Ready.
 echo.
 
