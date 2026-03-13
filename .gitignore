@@ -1,0 +1,33 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment files
+*.env.local
+*.env.test
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Scraped Data & Output
+*.csv
+*.mp4
+*.mkv
+*.webm
+*.part
+*.ytdl
+downloads/
+output/
+
+# Logs
+*.log
+
+# Windows thumbnail cache
+Thumbs.db
