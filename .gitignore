@@ -31,3 +31,7 @@ output/
 
 # Windows thumbnail cache
 Thumbs.db
+
+# Sessions and Cookies
+.yt_session/
+cookies.txt

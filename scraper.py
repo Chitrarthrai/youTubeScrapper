@@ -333,9 +333,20 @@ if __name__ == "__main__":
         try:
             from yt_login import login_and_save_cookies
             login_and_save_cookies('cookies.txt', browser_type=live_browser)
-        except ImportError:
-            print("[!] Could not import yt_login! Make sure requirements are installed.")
-            print("To fix: Run 'pip install playwright' and 'playwright install chromium'")
+        except ImportError as e:
+            print(f"\n[!] Critical Error: Could not load the login module.")
+            print(f"    Reason: {e}")
+            print("\n    This usually means a required package is missing or corrupted.")
+            print("    The automation system will try to fix this now...")
+            
+            # Proactive attempt to fix
+            import subprocess
+            import sys
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+            print("\n[+] Fixed requirements. Please try running the script again.")
+            exit(1)
+        except Exception as e:
+            print(f"\n[!] An unexpected error occurred during login: {e}")
             exit(1)
 
     # ---- START SCRAPE ----
